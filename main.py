@@ -1,6 +1,8 @@
 import requests
 import fake_useragent
 import time
+import mysql.connector
+
 from bs4 import BeautifulSoup
 
 ua = fake_useragent.UserAgent()
@@ -9,9 +11,9 @@ ua = fake_useragent.UserAgent()
 # salary = int(input('Введите предполагаемую зарплату: '))
 # onlyWithSalary = input('Показать только объявления с указанной зарплатой? ')
 req = 'frontend-стажер'
-experience = ''
+experience = '0'
 salary = 0
-onlyWithSalary = ''
+onlyWithSalary = '+'
 inputEducation = ['not_required_or_not_specified','higher']
 education = ''
 if inputEducation != []:
@@ -326,7 +328,7 @@ def getLinksOfVacancies(inputText):
             count -= 1
         except Exception as e:
             print(f'{e}')
-        time.sleep(0.5)
+        time.sleep(0.05)
 
 def getInfoFromVacancies(link):
     print(link)
@@ -343,28 +345,37 @@ def getInfoFromVacancies(link):
         return
     
     hhSoup = BeautifulSoup(hhRequest.content, 'lxml')
-
-    curNameOfVacancy = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('div', {'class': 'vacancy-title'}).find('h1', {'class': 'bloko-header-section-1'}).text
-    curSalary = hhSoup.find('div', {'class': 'vacancy-title'}).find('span', {'class': 'magritte-text___pbpft_3-0-9'}).text
-    curEmployer = hhSoup.find('div', {'class': 'vacancy-company-details'}).find('span', {'class': 'vacancy-company-name'}).find('a', {'class':'bloko-link'}).find('span', {'class': 'bloko-header-section-2'}).text
-    curWorkAddress = hhSoup.find('div', {'class': 'vacancy-company-redesigned'}).select('div', class_=False).find({'class': 'magritte-text___pbpft_3-0-9'}).text
-    curExperience = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('p', {'class': 'vacancy-description-list-item'}).find('span').text
-# except:
-#         curNameOfVacancy = 'Не найдена информация о названии вакансии'
-#         curSalary = 'Не найдена информация о доходе'
-#         curEmployer = 'Не найдена информация о работодателе'
-#         curExperience = 'Не найдена информация о требуемом опыте работы'
-#         curWorkAddress = 'Не найдена информация о требуемом адресе работы'
+    try:
+        curNameOfVacancy = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('div', {'class': 'vacancy-title'}).find('h1', {'class': 'bloko-header-section-1'}).text
+        curSalary = hhSoup.find('div', {'class': 'vacancy-title'}).find('span', {'class': 'magritte-text___pbpft_3-0-9'}).text
+        curEmployer = hhSoup.find('div', {'class': 'vacancy-company-details'}).find('span', {'class': 'vacancy-company-name'}).find('a', {'class':'bloko-link'}).find('span', {'class': 'bloko-header-section-2'}).text
+        curWorkAddress = hhSoup.find('div', {'class': 'vacancy-company-redesigned'}).find_all('div')[-1].text
+        curExperience = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('p', {'class': 'vacancy-description-list-item'}).find('span').text
+    except:
+        curNameOfVacancy = 'Не найдена информация о названии вакансии'
+        curSalary = 'Не найдена информация о доходе'
+        curEmployer = 'Не найдена информация о работодателе'
+        curExperience = 'Не найдена информация о требуемом опыте работы'
+        curWorkAddress = 'Не найдена информация о требуемом адресе работы'
 
     vacancy = {
         'name': curNameOfVacancy,
         'salary': curSalary.replace('\xa0', ''),
         'experience': curExperience,
         'employer': curEmployer.replace('\xa0', ''),
-        'curWorkAddress': curWorkAddress
-        # 'link': link,
+        'workAddress': curWorkAddress
     }
 
+    mydb = mysql.connector.connect(
+        host = 'localhost',
+        user = 'root',
+        passwd = 'Fhntv1002%',
+        database = 'parsed_data'
+    )
+    use_mydb = mydb.cursor()
+    insertInfo = 'INSERT INTO vacancies_info (name, salary, experience, employer, workAddress) VALUES (%s, %s, %s, %s, %s)'
+    use_mydb.execute(insertInfo, vacancy)
+    mydb.commit()
     return vacancy
 
 
@@ -379,7 +390,6 @@ if __name__ == '__main__':
     for a in getLinksOfVacancies(req):
         print(f'{k} - {getInfoFromVacancies(a)}')
         k += 1
-
-        time.sleep(0.5)
+        time.sleep(0.05)
     
 
