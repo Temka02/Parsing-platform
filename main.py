@@ -9,11 +9,6 @@ import logging
 
 app = Flask(__name__)
 swagger = Swagger(app)
-# Включение отладочного режима
-app.config['DEBUG'] = True
-
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
 
 from bs4 import BeautifulSoup
 
@@ -382,38 +377,37 @@ def getLinksOfVacancies(inputText, education, onlyWithSalary, salary, experience
     count = numberOfPages
     vacancyCount = 0
 
-    while vacancyCount < maxNumberOfVacancies:
-        for page in range(numberOfPages):
-            try:
-                print(f"Осталость страниц - {count}")
+    for page in range(numberOfPages):
+        try:
+            print(f"Осталость страниц - {count}")
+            print(f'{hhUrl}&page={page}')
 
-                hhLinkRequest = requests.get(
-                    url = f'{hhUrl}&page={page}', 
-                    headers = hhHeaders
-                )
+            hhLinkRequest = requests.get(
+                url = f'{hhUrl}&page={page}', 
+                headers = hhHeaders
+            )
 
-                if hhLinkRequest.status_code != 200:
-                    return
-                
-                hhLinkSoup = BeautifulSoup(hhLinkRequest.content, 'lxml')
-                # hhLinks = hhLinkSoup.find_all('a', {'class': 'bloko-link'})
-                hhLinks = []
-                spans = hhLinkSoup.find_all('span', {'class': 'serp-item__title-link-wrapper'})
-                for span in spans:
-                    hhLinks.append(span.find('a', {'class': 'bloko-link'}).get('href'))
+            if hhLinkRequest.status_code != 200:
+                return
+            
+            hhLinkSoup = BeautifulSoup(hhLinkRequest.content, 'lxml')
+            # hhLinks = hhLinkSoup.find_all('a', {'class': 'bloko-link'})
+            hhLinks = []
+            spans = hhLinkSoup.find_all('span', {'class': 'serp-item__title-link-wrapper'})
+            for span in spans:
+                hhLinks.append(span.find('a', {'class': 'bloko-link'}).get('href'))
+            print(hhLinks)
+            for link in hhLinks:
+                vacancyCount +=1 
+                yield link
+            
+            count -= 1   
 
-                for link in hhLinks:
-                    vacancyCount +=1 
-                    yield link
-                
-                count -= 1
-                if vacancyCount >= maxNumberOfVacancies:
-                    break
-
-            except Exception as e:
-                print(f'{e}')
-            time.sleep(0.05)
-
+        except Exception as e:
+            print(f'{e}')
+        time.sleep(0.05)
+        if vacancyCount >= maxNumberOfVacancies:
+            break
 
 # Получение информации о вакансии по ссылкам
 def getInfoFromVacancies(link):
@@ -432,35 +426,34 @@ def getInfoFromVacancies(link):
     
     hhSoup = BeautifulSoup(hhRequest.content, 'lxml')
     try:
-        curNameOfVacancy = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('div', {'class': 'vacancy-title'}).find('h1', {'class': 'bloko-header-section-1'}).text
+        curNameOfVacancy = hhSoup.find('div', {'class': 'vacancy-title'}).find('h1', {'class': 'bloko-header-section-1'}).text
         curSalary = hhSoup.find('div', {'class': 'vacancy-title'}).find('span', {'class': 'magritte-text___pbpft_3-0-9'}).text.replace('\xa0', '').replace("so'm", '')
         curEmployer = hhSoup.find('div', {'class': 'vacancy-company-details'}).find('span', {'class': 'vacancy-company-name'}).find('a', {'class':'bloko-link'}).find('span', {'class': 'bloko-header-section-2'}).text.replace('\xa0', '')
         curWorkAddress = hhSoup.find('div', {'class': 'vacancy-company-redesigned'}).find_all('div')[-1].text
         curExperience = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('p', {'class': 'vacancy-description-list-item'}).find('span').text
+        # vacancy = {
+        #     'name': curNameOfVacancy,
+        #     'salary': curSalary,
+        #     'experience': curExperience,
+        #     'employer': curEmployer,
+        #     'workAddress': curWorkAddress
+        # }
+        insertInfo = f"INSERT INTO vacancies_info (name, salary, experience, employer, workAddress) VALUES ('{curNameOfVacancy}', '{curSalary}', '{curExperience}', '{curEmployer}', '{curWorkAddress}')"
+        use_mydb.execute(insertInfo)
+        mydb.commit()
     except:
-        curNameOfVacancy = 'Не найдена информация о названии вакансии'
-        curSalary = 'Не найдена информация о доходе'
-        curEmployer = 'Не найдена информация о работодателе'
-        curExperience = 'Не найдена информация о требуемом опыте работы'
-        curWorkAddress = 'Не найдена информация о требуемом адресе работы'
+        pass
+    #     curNameOfVacancy = 'Не найдена информация о названии вакансии'
+    #     curSalary = 'Не найдена информация о доходе'
+    #     curEmployer = 'Не найдена информация о работодателе'
+    #     curExperience = 'Не найдена информация о требуемом опыте работы'
+    #     curWorkAddress = 'Не найдена информация о требуемом адресе работы'
 
-    vacancy = {
-        'name': curNameOfVacancy,
-        'salary': curSalary,
-        'experience': curExperience,
-        'employer': curEmployer,
-        'workAddress': curWorkAddress
-    }
-
-    insertInfo = f"INSERT INTO vacancies_info (name, salary, experience, employer, workAddress) VALUES ('{curNameOfVacancy}', '{curSalary}', '{curExperience}', '{curEmployer}', '{curWorkAddress}')"
-    use_mydb.execute(insertInfo)
-    mydb.commit()
-    return vacancy
 
 # Запуск программы
 if __name__ == '__main__':
     use_mydb.execute("TRUNCATE TABLE vacancies_info")
     print('--------------------------------------------------->')
     use_mydb.execute("TRUNCATE TABLE vacancies_info")
-    app.run(debug=True)
+    app.run()
 
