@@ -1,0 +1,49 @@
+body{
+    background-color: rgb(192, 192, 192);
+    margin: 0;
+    padding: 0
+}
+.title{
+    font-size: 35px;
+    width: 90%;
+    height: 40px;
+    margin: 20px auto 15px auto;
+    border: 3px solid rgb(143, 143, 143);
+    border-radius: 7px;
+    text-align: center;
+    background-color: white;
+    padding: 8px 0px;
+}
+
+.homeBtn{
+    display: block;
+    margin: 65px auto;
+    height: 50px;
+    width: 11%;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.tableStyle{
+    padding: 5px 7px;
+    width: 90%;
+    border: 3px solid rgb(143, 143, 143);
+    border-radius: 4px;
+    background-color: #fff;
+    margin: 0 auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tableStyle th{
+    border: 2px solid rgb(143, 143, 143);
+    border-radius: 3px
+}
+
+.tableStyle td{
+    border: 2px solid rgb(143, 143, 143);
+    border-radius: 3px
+}
+
+

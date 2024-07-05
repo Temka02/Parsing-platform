@@ -1,0 +1,94 @@
+
+body{
+    background-color: rgb(192, 192, 192);
+    margin: 0;
+    padding: 0
+}
+
+h1{
+    font-size: 35px;
+    width: 90%;
+    height: 50px;
+    margin: 20px auto 15px auto;
+    border: 3px solid rgb(143, 143, 143);
+    border-radius: 7px;
+    text-align: center;
+    background-color: white;
+    padding: 8px 0px;
+}
+
+.research{
+    background-color: white;
+    height: 80vh;
+    width: 90%;
+    margin: 0px auto 0px auto;
+    border: 3px solid rgb(143, 143, 143);
+    border-radius: 7px;
+}
+
+.inputForm{
+    width: 100%;
+}
+
+.inputStyle{
+    background-color: rgb(233, 233, 233);
+    font-size: 20px;
+    width: 40%;
+    height: 38px;
+    border: 2px solid rgb(143, 143, 143);
+    border-radius: 7px;
+    margin: 30px 29.7% 0px 29.7%;
+    text-align: center;
+    padding: 5px 30px 5px 10px;
+}
+
+.inputForm h2{
+    font-size: 29px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.filter{
+    margin-top: 15px;
+    display: block;
+    text-align: center;
+}
+
+.filter h3{
+    font-size: 23px;
+    margin: 0px 0px 7px 0px;
+    color: rgb(72, 72, 72);
+    font-weight: bold;
+}
+
+.labelStyle{
+    display: inline;
+    font-size: 17px;
+    margin: 0px 10px 0px 0px;
+}
+
+.radioStyle{
+    height: 13px;
+    width: 13px;
+}
+
+.inputSalaryStyle{
+    width: 20%;
+    height: 28px;
+    border: 2px solid rgb(143, 143, 143);
+    border-radius: 7px;
+    text-align: center;
+    padding: 5px 30px 5px 10px;
+    font-size: 20px;
+}
+
+.submitBtn{
+    display: block;
+    margin: 65px auto;
+    height: 35px;
+    width: 10%;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}

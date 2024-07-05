@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/main.css">
+    <title>Parsing platform</title>
+</head>
+<body>
+    <h1>Платформа для парсинга вакансий с сайта hh.ru</h1>
+    <div class="research">
+        <form action="/process" method="post" class="inputForm">
+            <input type="text" name="req" placeholder="Введите название профессии" required class="inputStyle">
+            <h2>Фильтры:</h2>
+            <div class="filters">
+                <div class="filter">
+                    <h3 class="filterName">Требуемый опыт работы:</h3>
+                    <div class="experienceFilters">
+                        <input type="radio" name="experience" value="doesn't matter" id="none_experience" class="radioStyle" required>
+                        <label for="none_experience" class="labelStyle">Не имеет значения</label>
+                        <input type="radio" name="experience" value="0" id="zero_experience" required>
+                        <label for="one_three_experience" class="labelStyle">Нет опыта</label>
+                        <input type="radio" name="experience" value="1–3" id="one_three_experience" required>
+                        <label for="one_three_experience" class="labelStyle">1–3 года</label>
+                        <input type="radio" name="experience" value="3–6" id="three_six_experience" required>
+                        <label for="three_six_experience" class="labelStyle">3–6 лет</label>
+                        <input type="radio" name="experience" value=">6" id="more_six_experience" required>
+                        <label for="more_six_experience" class="labelStyle">Более 6 лет</label>
+                    </div>
+                </div>
+                <div class="filter">
+                    <h3 class="filterName">Образование:</h3>
+                    <input type="radio" name="education" value="not_required_or_not_specified" id="educationRadio" required>
+                    <label for="educationRadio" class="labelStyle">Не требуется или не указано</label>
+                    <input type="radio" name="education" value="special_secondary" id="educationRadio" required>
+                    <label for="educationRadio" class="labelStyle">Среднее профессиональное</label>
+                    <input type="radio" name="education" value="higher" id="educationRadio" required>
+                    <label for="educationRadio" class="labelStyle">Высшее</label>
+                </div>
+                <div class="filter">
+                    <h3 class="filterName">Уровень дохода(руб):</h3>
+                    <input type="text" name="salary" required class="inputSalaryStyle">
+                </div>
+                <div class="filter">
+                    <h3 class="filterName">Показывать только вакансии с указанным уровнем дохода?</h3>
+                    <input type="radio" name="onlyWithSalary" value="+" id="onlyWithSalaryRadio" required>
+                    <label for="onlyWithSalaryRadio" class="labelStyle">Да</label>
+                    <input type="radio" name="onlyWithSalary" value="-" id="onlyWithSalaryRadio" required>
+                    <label for="onlyWithSalaryRadio" class="labelStyle">Нет</label>
+                </div>
+
+            </div>
+            <button type="submit" class="submitBtn">Поиск</button>
+        </form>
+    </div>
+</body>
+</html>
