@@ -7,8 +7,12 @@ from flask import Flask, render_template, request, url_for, redirect, jsonify
 from flasgger import Swagger
 import logging
 
+logging.basicConfig(level=logging.DEBUG)
+
 app = Flask(__name__)
 swagger = Swagger(app)
+
+app.config['DEBUG'] = True
 
 from bs4 import BeautifulSoup
 
@@ -70,30 +74,66 @@ def vacancies():
     """
     Get vacancies
     ---
+    parameters:
+      - name: name
+        in: query
+        type: string
+        required: true
+        example: курьер 
+      - name: salary
+        in: query
+        type: string
+        required: true
+        example: 100000
+      - name: experience
+        in: query
+        type: string
+        required: true
+        example: 1-3
+      - name: education
+        in: query
+        type: string
+        required: true
+        example: higher
+      - name: onlyWithSalary
+        in: query
+        type: string
+        required: true
+        example: Да
+    
     responses:
       200:
         description: A list of vacancies
         schema:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: integer
-              salary:
-                type: string
-              experience:
-                type: string
-              employer:
-                type: string
-              workAddress:
-                type: string
+            type: array
+            items:
+                type: object
+                properties:
+                    data:
+                        type: object
+                    
+            
     """
     if use_mydb:
         try:
             use_mydb.execute("SELECT * FROM vacancies_info")
             data = use_mydb.fetchall()
-            return render_template('index.html', data=data)
+            print(data)
+            vacancies = []
+            for row in data:
+                vacancies.append({
+                    'name': row[0],
+                    'salary': row[1],
+                    'experience': row[2],
+                    'employer': row[3],
+                    'workAddress': row[4]
+                })
+            if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+                return jsonify(vacancies)
+            else:
+                return render_template('index.html', data=data)    
+            # return render_template('index.html', data=data), jsonify(vacancies)
+
         except Exception as e:
             logging.error(f"Query failed: {e}")
             return str(e)
@@ -105,7 +145,8 @@ def getLinksOfVacancies(inputText, education, onlyWithSalary, salary, experience
     hhHeaders = {
         "user-agent": ua.random
     }
-    searchEducation = True
+    if education != None:
+        searchEducation = True
     if searchEducation:
         if onlyWithSalary == '+':
             if salary != '0' or salary != '':
@@ -380,7 +421,6 @@ def getLinksOfVacancies(inputText, education, onlyWithSalary, salary, experience
     for page in range(numberOfPages):
         try:
             print(f"Осталость страниц - {count}")
-            print(f'{hhUrl}&page={page}')
 
             hhLinkRequest = requests.get(
                 url = f'{hhUrl}&page={page}', 
@@ -396,7 +436,6 @@ def getLinksOfVacancies(inputText, education, onlyWithSalary, salary, experience
             spans = hhLinkSoup.find_all('span', {'class': 'serp-item__title-link-wrapper'})
             for span in spans:
                 hhLinks.append(span.find('a', {'class': 'bloko-link'}).get('href'))
-            print(hhLinks)
             for link in hhLinks:
                 vacancyCount +=1 
                 yield link
@@ -438,6 +477,13 @@ def getInfoFromVacancies(link):
         #     'employer': curEmployer,
         #     'workAddress': curWorkAddress
         # }
+        vacancy = {
+            'name': curNameOfVacancy,
+            'salary': curSalary,
+            'experience': curExperience,
+            'employer': curEmployer,
+            'workAddress': curWorkAddress
+        }
         insertInfo = f"INSERT INTO vacancies_info (name, salary, experience, employer, workAddress) VALUES ('{curNameOfVacancy}', '{curSalary}', '{curExperience}', '{curEmployer}', '{curWorkAddress}')"
         use_mydb.execute(insertInfo)
         mydb.commit()
@@ -448,12 +494,11 @@ def getInfoFromVacancies(link):
     #     curEmployer = 'Не найдена информация о работодателе'
     #     curExperience = 'Не найдена информация о требуемом опыте работы'
     #     curWorkAddress = 'Не найдена информация о требуемом адресе работы'
-
+    
+    return jsonify (vacancy)
 
 # Запуск программы
 if __name__ == '__main__':
-    use_mydb.execute("TRUNCATE TABLE vacancies_info")
     print('--------------------------------------------------->')
-    use_mydb.execute("TRUNCATE TABLE vacancies_info")
     app.run()
 
