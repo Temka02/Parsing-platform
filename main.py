@@ -1,16 +1,15 @@
 # Импортирование
+import os
 import requests
 import fake_useragent 
 import time
 import mysql.connector
 from flask import Flask, render_template, request, url_for, redirect, jsonify
-from flasgger import Swagger
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-swagger = Swagger(app)
 
 app.config['DEBUG'] = True
 
@@ -20,29 +19,49 @@ from bs4 import BeautifulSoup
 ua = fake_useragent.UserAgent()
 
 # Подключение к БД
-try:
-    mydb = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        passwd='Fhntv1002%',
-        database='parsed_data'
-    )
-    use_mydb = mydb.cursor()
-except mysql.connector.Error as err:
-    logging.error(f"Error: {err}")
-    use_mydb = None
+DATABASE_HOST = os.getenv('DATABASE_HOST', 'db')
+DATABASE_USER = os.getenv('DATABASE_USER', 'root')
+DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD', 'Fhntv1002%')
+DATABASE_NAME = os.getenv('DATABASE_NAME', 'parsed_data')
+
+time.sleep(10)
+
+retries = 5
+while retries > 0:
+    try:
+        mydb = mysql.connector.connect(
+            host=DATABASE_HOST,
+            user=DATABASE_USER,
+            passwd=DATABASE_PASSWORD,
+            database=DATABASE_NAME
+        )
+        use_mydb = mydb.cursor()
+        use_mydb.execute("CREATE TABLE IF NOT EXISTS vacancies_info (name VARCHAR(255), salary VARCHAR(255), experience VARCHAR(255), employer VARCHAR(255), workAddress VARCHAR(255))")
+        break
+    except mysql.connector.Error as err:
+        app.logger.error(f"Error: {err}")
+        retries -= 1
+        time.sleep(5)  # Задержка 5 секунд перед повторной попыткой
+
+if retries == 0:
+    raise RuntimeError("Failed to connect to the database after several attempts")
+# try:
+#     mydb = mysql.connector.connect(
+#         host=os.getenv('DATABASE_HOST', 'localhost'),
+#         user=os.getenv('DATABASE_USER', 'root'),
+#         passwd=os.getenv('DATABASE_PASSWORD', ''),
+#         database=os.getenv('DATABASE_NAME', 'parsed_data')
+#     )
+#     use_mydb = mydb.cursor()
+# except mysql.connector.Error as err:
+#     logging.error(f"Error: {err}")
+#     use_mydb = None
 
 @app.route("/")
 def main():
-    """
-    Main page
-    ---
-    responses:
-      200:
-        description: Main page
-    """
     if use_mydb:
         try:
+            use_mydb.execute("TRUNCATE TABLE vacancies_info")
             return render_template('main.html')
         except Exception as e:
             logging.error(f"Query failed: {e}")
@@ -52,7 +71,6 @@ def main():
 
 @app.route('/process', methods=['POST'])
 def process():
-    use_mydb.execute("TRUNCATE TABLE vacancies_info")
     req = request.form['req']
     curEducation = request.form['education']
     curSalary = request.form['salary'].replace("so'm", ' ')
@@ -71,68 +89,12 @@ def home():
 
 @app.route("/vacancies", methods=['GET', 'POST'])
 def vacancies():
-    """
-    Get vacancies
-    ---
-    parameters:
-      - name: name
-        in: query
-        type: string
-        required: true
-        example: курьер 
-      - name: salary
-        in: query
-        type: string
-        required: true
-        example: 100000
-      - name: experience
-        in: query
-        type: string
-        required: true
-        example: 1-3
-      - name: education
-        in: query
-        type: string
-        required: true
-        example: higher
-      - name: onlyWithSalary
-        in: query
-        type: string
-        required: true
-        example: Да
-    
-    responses:
-      200:
-        description: A list of vacancies
-        schema:
-            type: array
-            items:
-                type: object
-                properties:
-                    data:
-                        type: object
-                    
-            
-    """
     if use_mydb:
         try:
             use_mydb.execute("SELECT * FROM vacancies_info")
             data = use_mydb.fetchall()
             print(data)
-            vacancies = []
-            for row in data:
-                vacancies.append({
-                    'name': row[0],
-                    'salary': row[1],
-                    'experience': row[2],
-                    'employer': row[3],
-                    'workAddress': row[4]
-                })
-            if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
-                return jsonify(vacancies)
-            else:
-                return render_template('index.html', data=data)    
-            # return render_template('index.html', data=data), jsonify(vacancies)
+            return render_template('index.html', data=data)
 
         except Exception as e:
             logging.error(f"Query failed: {e}")
