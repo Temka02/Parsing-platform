@@ -6,14 +6,15 @@ import time
 import mysql.connector
 from flask import Flask, render_template, request, url_for, redirect, jsonify
 import logging
+from bs4 import BeautifulSoup
 
-logging.basicConfig(level=logging.DEBUG)
+
 
 app = Flask(__name__)
 
+logging.basicConfig(level=logging.DEBUG)
 app.config['DEBUG'] = True
 
-from bs4 import BeautifulSoup
 
 # Создание переменной ua
 ua = fake_useragent.UserAgent()
@@ -45,17 +46,7 @@ while retries > 0:
 
 if retries == 0:
     raise RuntimeError("Failed to connect to the database after several attempts")
-# try:
-#     mydb = mysql.connector.connect(
-#         host=os.getenv('DATABASE_HOST', 'localhost'),
-#         user=os.getenv('DATABASE_USER', 'root'),
-#         passwd=os.getenv('DATABASE_PASSWORD', ''),
-#         database=os.getenv('DATABASE_NAME', 'parsed_data')
-#     )
-#     use_mydb = mydb.cursor()
-# except mysql.connector.Error as err:
-#     logging.error(f"Error: {err}")
-#     use_mydb = None
+
 
 @app.route("/")
 def main():
@@ -432,20 +423,6 @@ def getInfoFromVacancies(link):
         curEmployer = hhSoup.find('div', {'class': 'vacancy-company-details'}).find('span', {'class': 'vacancy-company-name'}).find('a', {'class':'bloko-link'}).find('span', {'class': 'bloko-header-section-2'}).text.replace('\xa0', '')
         curWorkAddress = hhSoup.find('div', {'class': 'vacancy-company-redesigned'}).find_all('div')[-1].text
         curExperience = hhSoup.find('div', {'class': 'wrapper-flat--H4DVL_qLjKLCo1sytcNI'}).find('p', {'class': 'vacancy-description-list-item'}).find('span').text
-        # vacancy = {
-        #     'name': curNameOfVacancy,
-        #     'salary': curSalary,
-        #     'experience': curExperience,
-        #     'employer': curEmployer,
-        #     'workAddress': curWorkAddress
-        # }
-        vacancy = {
-            'name': curNameOfVacancy,
-            'salary': curSalary,
-            'experience': curExperience,
-            'employer': curEmployer,
-            'workAddress': curWorkAddress
-        }
         insertInfo = f"INSERT INTO vacancies_info (name, salary, experience, employer, workAddress) VALUES ('{curNameOfVacancy}', '{curSalary}', '{curExperience}', '{curEmployer}', '{curWorkAddress}')"
         use_mydb.execute(insertInfo)
         mydb.commit()
@@ -457,7 +434,6 @@ def getInfoFromVacancies(link):
     #     curExperience = 'Не найдена информация о требуемом опыте работы'
     #     curWorkAddress = 'Не найдена информация о требуемом адресе работы'
     
-    return jsonify (vacancy)
 
 # Запуск программы
 if __name__ == '__main__':
